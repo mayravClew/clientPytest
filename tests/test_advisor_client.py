@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import allure
 from models import client_model
@@ -63,13 +65,14 @@ def test_add_client(clients_page, new_clients_page):
         clients_page.add_client_button()
         client_id = new_clients_page.add_client(client_data)
 
-        # Verify client was added
+    with allure.step("Verify the new client in clients' grid"):
+        time.sleep(2)
         client_data.clientId = client_id
         assert client_id, 'The ID of the created client should not be None'
         assert clients_page.verify_client_exists_at_grid(client_id), 'Client should exist in the grid'
         ret_val = clients_page.verify_client_data_at_grid(client_id, client_data)
 
-        # Delete the client at the end of the test
+    with allure.step("Delete the client at the end of the test"):
         assert ret_val, f"Client's data in the grid did not match the expected client data: {client_data}"
         clients_page.fin(client_id)
 

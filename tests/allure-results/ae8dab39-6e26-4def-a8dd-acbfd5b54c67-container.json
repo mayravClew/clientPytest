@@ -1,1 +1,0 @@
-{"uuid": "650916ff-a617-487c-9931-e8dcc22c8ba0", "children": ["ef296e2c-43f7-49fb-81b9-a9cc02a4522a"], "befores": [{"name": "selenium_interface", "status": "passed", "start": 1722970591029, "stop": 1722970592854}], "afters": [{"name": "selenium_interface::0", "status": "passed", "start": 1722970603468, "stop": 1722970607533}], "start": 1722970591029, "stop": 1722970607533}
