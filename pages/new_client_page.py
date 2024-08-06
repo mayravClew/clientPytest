@@ -1,3 +1,4 @@
+import time
 from typing import Tuple
 from selenium.webdriver.common.by import By
 from models.client_model import Client
@@ -50,6 +51,7 @@ class NewClientPage(BasePage):
         self.select_option(self.state_options, client.state)
         self.click(self.repId)
         self.wait_for(self.repId_options)
+        time.sleep(3)
         self.select_option(self.repId_options, client.repId)
         self.click(self.add_client_button)
 

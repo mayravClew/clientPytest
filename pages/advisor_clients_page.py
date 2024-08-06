@@ -90,15 +90,16 @@ class AdvisorClientsPage(BasePage):
         row = next(
             (single_row for single_row in rows if single_row.find_elements(By.TAG_NAME, "td")[0].text == client_id),
             None)
-        assert row, f'Row should not be null for client_id {client_id}'
+        assert row, f'Row should not be None for client_id {client_id}'
         return row
 
-    def fin(self, client_id: str) -> None:
+    def fin(self, client_id: str = None) -> None:
         """
         Delete a client by clicking on their row and then confirming the deletion.
 
         :param client_id: The ID of the client to be deleted.
         :type client_id: str
         """
-        self.get_row(client_id).click()
-        self.single_client_page.fin()
+        if client_id:
+            self.get_row(client_id).click()
+            self.single_client_page.fin()
