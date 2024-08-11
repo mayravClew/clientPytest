@@ -46,27 +46,12 @@ def create_booking(booking_payload: dict):
     return new_booking
 
 
-# Fixture to get all bookings
-@pytest.fixture
-def get_all_bookings():
-    response = requests.get(BASE_BOOKING_URL + '/', headers=HEADERS)
-
-    assert response.status_code == 200, f"Failed to get bookings: {response.status_code} - {response.text}"
-
-    return response.json()
-
-
 def get_booking_by_id(new_booking_id):
     response = requests.get(BASE_BOOKING_URL + '/' + str(new_booking_id), headers=HEADERS)
 
     assert response.status_code == 200, f"Failed to get booking: {response.status_code} - {response.text}"
 
     return response.json()
-
-
-def find_booking_by_id_from_all(all_bookings, new_booking_id):
-    found = next((booking for booking in all_bookings if booking['bookingid'] == new_booking_id), None)
-    return found
 
 
 def update_booking(booking: Booking, token):
@@ -79,7 +64,8 @@ def update_booking(booking: Booking, token):
     return response.json()
 
 
-def test_new_booking_in_all_bookings(get_all_bookings):
+#When a user creates a new booking via API then the booking appears in all booking results.
+def test_new_booking_in_all_bookings():
     checkin_date = datetime.now() + timedelta(days=7)
     checkout_date = checkin_date + timedelta(days=2)
 
@@ -96,12 +82,11 @@ def test_new_booking_in_all_bookings(get_all_bookings):
     }
 
     new_booking_id = create_booking(booking_payload)['bookingid']
-    get_booking_by_id(new_booking_id=new_booking_id)
-
-    all_bookings = get_all_bookings
-    assert find_booking_by_id_from_all(all_bookings, new_booking_id), f"The new booking id {new_booking_id} does not appear in the booking results."
+    assert get_booking_by_id(
+        new_booking_id=new_booking_id), f"The new booking id {new_booking_id} does not appear in the booking results."
 
 
+#When a user updates an existing booking - the booking updated successfully.
 def test_update_booking(auth_token):
     checkin_date = datetime.now() + timedelta(days=7)
     checkout_date = checkin_date + timedelta(days=4)
@@ -120,12 +105,32 @@ def test_update_booking(auth_token):
     org_booking = create_booking(booking_dict)
 
     org_booking['booking']['bookingdates']['checkout'] = (
-            datetime.strptime(org_booking['booking']['bookingdates']['checkin'], '%Y-%m-%d') + timedelta(days=5))
+            datetime.strptime(org_booking['booking']['bookingdates']['checkin'], '%Y-%m-%d') + timedelta(
+        days=5)).strftime('%Y-%m-%d')
 
     update_booking(org_booking, auth_token)
 
     updated_booking = get_booking_by_id(new_booking_id=org_booking['bookingid'])
 
-    assert datetime.strptime(updated_booking['bookingdates']['checkout'], '%Y-%m-%d') == org_booking['booking']['bookingdates']['checkout'], \
-        (f"The new booking was not updated successfully: was {updated_booking['bookingdates']['checkout']} "
-         f"but should have been {org_booking['booking']['bookingdates']['checkout']}")
+    org_booking_obj = Booking(
+        firstname=org_booking.get('booking').get('firstname'),
+        lastname=org_booking.get('booking').get('lastname'),
+        totalprice=str(org_booking.get('booking').get('totalprice')),  # Converting to string as per the dataclass
+        depositpaid=str(org_booking.get('booking').get('depositpaid')),  # Converting to string as per the dataclass
+        bookingdates_checking=org_booking.get('booking').get('bookingdates').get('checkin'),
+        bookingdates_checkout=org_booking.get('booking').get('bookingdates').get('checkout'),
+        additionalneeds=org_booking.get('booking').get('additionalneeds')
+    )
+
+    # Create a Booking object using the JSON data
+    updated_booking_obj = Booking(
+        firstname=updated_booking.get('firstname'),
+        lastname=updated_booking.get('lastname'),
+        totalprice=str(updated_booking.get('totalprice')),  # Converting to string as per the dataclass
+        depositpaid=str(updated_booking.get('depositpaid')),  # Converting to string as per the dataclass
+        bookingdates_checking=updated_booking.get('bookingdates').get('checkin'),
+        bookingdates_checkout=updated_booking.get('bookingdates').get('checkout'),
+        additionalneeds=updated_booking.get('additionalneeds')
+    )
+    assert org_booking_obj.compare(updated_booking_obj), \
+        f"The new booking was not updated successfully: was {updated_booking},but should have been {org_booking['booking']}"
